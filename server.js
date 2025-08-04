@@ -3,9 +3,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { Configuration, OpenAIApi } from 'openai';
 
-dotenv.config();
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+const { Configuration, OpenAIApi } = require('openai');
+
 const app = express();
-const port = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -15,26 +19,24 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-app.post('/api/chat', async (req, res) => {
-  const userMessage = req.body.message;
-
+app.post('/', async (req, res) => {
   try {
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: 'You are Zoha’s personal assistant chatbot. Keep responses concise and friendly.' },
-        { role: 'user', content: userMessage }
-      ],
-      max_tokens: 500,
+    const { messages, model, max_tokens } = req.body;
+
+    const response = await openai.createChatCompletion({
+      model,
+      messages,
+      max_tokens,
     });
 
-    res.json({ reply: completion.data.choices[0].message.content });
+    res.json(response.data);
   } catch (error) {
-    console.error('OpenAI API error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to get response from OpenAI.' });
+    console.error('Error in /chat:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Something went wrong' });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
+
