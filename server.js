@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
-dotenv.config(); 
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,22 +11,21 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 app.post('/', async (req, res) => {
   try {
     const { messages, model, max_tokens } = req.body;
 
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model,
       messages,
       max_tokens,
     });
 
-    res.json(response.data);
+    res.json(response);
   } catch (error) {
     console.error('Error in /chat:', error.response?.data || error.message);
     res.status(500).json({ error: 'Something went wrong' });
@@ -36,5 +35,6 @@ app.post('/', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
 
 
