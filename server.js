@@ -1,40 +1,46 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
-dotenv.config();
+export default async function handler(req, res) {
+  // CORS (allow your GitHub Pages origin)
+  res.setHeader("Access-Control-Allow-Origin", "https://zohaq11.github.io");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
 
-app.use(cors());
-app.use(express.json());
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    res.status(500).json({ error: "Missing OPENAI_API_KEY" });
+    return;
+  }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-app.post('/', async (req, res) => {
   try {
-    const { messages, model, max_tokens } = req.body;
+    const { messages, model = "gpt-3.5-turbo", max_tokens = 300 } = req.body || {};
+    const openai = new OpenAI({ apiKey });
 
-    const response = await openai.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model,
       messages,
-      max_tokens,
+      max_tokens
     });
 
-    res.json(response);
-  } catch (error) {
-    console.error('Error in /chat:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Something went wrong' });
+    res.status(200).json(completion);
+  } catch (err) {
+    console.error("OpenAI error:", err?.response?.data || err.message);
+    res.status(err.status ?? 500).json({
+      error: "OpenAI request failed",
+      details: err?.response?.data || err.message
+    });
   }
-});
+}
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
 
 
 
