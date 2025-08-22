@@ -1,5 +1,5 @@
 {
-  "name": "zoha-chatbot-vercel",
+  "name": "zoha-chatbot-server",
   "version": "1.0.0",
   "private": true,
   "type": "module",
